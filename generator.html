@@ -493,6 +493,7 @@
 // ─── STATE ────────────────────────────────────────────────────
 let currentStep = 1;
 const totalSteps = 10;
+let profile = null;
 let answers = {
   experience: null,
   goal: null,
@@ -685,7 +686,7 @@ function updatePeriodSuggestion() {
 // ─── PROGRAM GENERATION ───────────────────────────────────────
 async function buildProgram() {
   answers.injuryNotes = document.getElementById('injury-notes')?.value || '';
-  const profile = createProfile(answers);
+  profile = createProfile(answers);
   generatedProgram = generateProgram(profile);
 
   // Show loading then program
