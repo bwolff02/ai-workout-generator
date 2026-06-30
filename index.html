@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Workout Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      letter-spacing: 0.04em;
+      margin-bottom: 20px;
+      color: #c8f135;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: #999;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 16px 48px;
+      background: #c8f135;
+      color: #000;
+      text-decoration: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 20px;
+    }
+
+    .cta-button:hover {
+      background: #b0d428;
+      transform: translateY(-2px);
+    }
+
+    .features {
+      margin-top: 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 30px;
+      padding-top: 40px;
+      border-top: 1px solid #333;
+    }
+
+    .feature {
+      text-align: center;
+    }
+
+    .feature-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .feature-title {
+      font-size: 14px;
+      color: #c8f135;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .feature-desc {
+      font-size: 13px;
+      color: #666;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI WORKOUT GENERATOR</h1>
+    <p class="subtitle">
+      Get a personalized workout program tailored to your experience, goals, and lifestyle. Answer a few questions and let AI create your perfect training plan.
+    </p>
+
+    <button class="cta-button" onclick="window.location.href='generator.html'">
+      Generate My Program
+    </button>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🎯</div>
+        <div class="feature-title">Smart Customization</div>
+        <div class="feature-desc">Tailored to your goals</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-title">Instant Results</div>
+        <div class="feature-desc">Get your plan in seconds</div>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">Evidence-Based</div>
+        <div class="feature-desc">Proven training science</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
