@@ -917,7 +917,11 @@ function activateProgram() {
   const legacy = programToLegacyFormat(generatedProgram);
   localStorage.setItem('active_generated_program', JSON.stringify(legacy));
   localStorage.setItem('generated_program', JSON.stringify(generatedProgram));
-  alert('Program saved! Head back to the tracker to start logging.');
+  localStorage.setItem('generator_profile', JSON.stringify(profile));
+  // Redirect to tracker
+  setTimeout(() => {
+    window.location.href = 'tracker.html';
+  }, 500);
 }
 
 // ─── INIT ─────────────────────────────────────────────────────

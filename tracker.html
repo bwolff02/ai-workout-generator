@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Your Workouts</title>
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --white: #fff;
+      --accent: #c8f135;
+      --card: #1a1a1a;
+      --border: #333;
+      --muted: #999;
+      --input-bg: #222;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 36px;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+    }
+
+    .header-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: var(--card);
+      color: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    button:hover {
+      background: var(--border);
+      border-color: var(--accent);
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: var(--black);
+      border-color: var(--accent);
+    }
+
+    button.primary:hover {
+      background: #b0d428;
+    }
+
+    .controls {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .day-selector {
+      flex: 1;
+      max-width: 300px;
+    }
+
+    .day-selector select {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--white);
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+    }
+
+    .day-tabs {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      background: var(--card);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: var(--black);
+      border-color: var(--accent);
+    }
+
+    .day-header {
+      margin-bottom: 30px;
+    }
+
+    .day-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 0.04em;
+      margin-bottom: 5px;
+    }
+
+    .day-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .sections {
+      display: grid;
+      gap: 30px;
+    }
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .exercise {
+      background: #0f0f0f;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .exercise-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .exercise-note {
+      font-size: 12px;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 10px;
+    }
+
+    .exercise-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .exercise-actions button {
+      padding: 6px 12px;
+      font-size: 11px;
+    }
+
+    .sets-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .set-row {
+      display: grid;
+      grid-template-columns: 60px 80px 80px auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .set-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input[type="number"] {
+      padding: 8px 10px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--white);
+      border-radius: 4px;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 0.04em;
+      margin-bottom: 20px;
+    }
+
+    .modal-section {
+      margin-bottom: 20px;
+    }
+
+    .modal-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .suggestions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .suggestion {
+      padding: 12px;
+      background: #0f0f0f;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+
+    .suggestion:hover {
+      border-color: var(--accent);
+      background: var(--input-bg);
+    }
+
+    .suggestion-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .suggestion-reason {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer button {
+      flex: 1;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-content">
+        <h1>TRACK YOUR WORKOUTS</h1>
+        <div class="header-buttons">
+          <button onclick="window.location.href='index.html'">← Back Home</button>
+          <button class="primary" onclick="saveWorkout()">Save Workout</button>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="day-selector">
+          <select id="daySelector" onchange="switchDay(this.value)">
+            <option value="">Select a day...</option>
+          </select>
+        </div>
+      </div>
+      <div class="day-tabs" id="dayTabs"></div>
+    </header>
+
+    <main id="mainContent"></main>
+
+    <div class="modal" id="editModal">
+      <div class="modal-content">
+        <div class="modal-title">Edit Exercise</div>
+        <div class="modal-section">
+          <label class="modal-label">Exercise Name</label>
+          <div id="editExerciseName" style="font-weight: 600; margin-bottom: 20px;"></div>
+        </div>
+
+        <div class="modal-section">
+          <label class="modal-label">Swap for similar exercise</label>
+          <div class="suggestions" id="exerciseSuggestions"></div>
+        </div>
+
+        <div class="modal-section">
+          <label class="modal-label">Adjust volume</label>
+          <div class="suggestions" id="volumeSuggestions"></div>
+        </div>
+
+        <div class="footer">
+          <button onclick="closeEditModal()">Cancel</button>
+          <button class="primary" onclick="applyEdit()">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="generator/data-structures.js"></script>
+  <script src="generator/exercise-database.js"></script>
+  <script src="tracker.js"></script>
+</body>
+</html>
