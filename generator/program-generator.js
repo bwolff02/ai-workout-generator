@@ -120,9 +120,37 @@ function assignWaveTags(dayLayouts, periodization) {
 
 // ─── EXERCISE PICKER ──────────────────────────────────────────
 
+// Display labels for the day-focus subtitle (e.g. "Chest Primary — Heavy")
+const MUSCLE_LABEL = {
+  chest:'Chest', back:'Back', shoulders:'Shoulder', side_delts:'Side Delt',
+  rear_delts:'Rear Delt', quads:'Quad', hamstrings:'Hamstring', glutes:'Glute',
+  calves:'Calf', biceps:'Bicep', triceps:'Tricep', traps:'Trap', forearms:'Forearm', abs:'Core'
+};
+
+function exerciseCue(id) {
+  const ex = getExerciseById(id);
+  return ex && ex.cue ? ex.cue : '';
+}
+
+// Anchor set scheme — heavy weeks use top sets, volume weeks use working sets
+function anchorTarget(tag) {
+  return tag === 'heavy' ? '2 top sets + 1 back-off' : '2 working sets + 1 back-off';
+}
+
+function joinNote(...parts) {
+  return parts.filter(Boolean).join(' ');
+}
+
+// Volume weeks rotate selection by `offset` so Week A and Week B differ
+function pickCandidate(candidates, usedIds, offset) {
+  const avail = candidates.filter(c => !usedIds.has(c.id));
+  if (avail.length === 0) return null;
+  return avail[Math.min(offset, avail.length - 1)];
+}
+
 function pickExercisesForDay(dayType, tag, profile, limits) {
   const muscleMap = SPLIT_MUSCLE_MAP[dayType];
-  if (!muscleMap) return { anchors: [], accessories: [] };
+  if (!muscleMap) return { anchors: [], accessories: [], focus: '' };
 
   const equipment = profile.equipment;
   const goal = profile.goal;
@@ -130,101 +158,97 @@ function pickExercisesForDay(dayType, tag, profile, limits) {
   const anchorSets = getSetsPerExercise(profile, true);
   const accessorySets = getSetsPerExercise(profile, false);
   const techniques = profile.techniques || [];
+  const variantOffset = tag === 'volume' ? 1 : 0; // distinct Week A vs Week B
 
-  // Pick anchors — cycle through anchor muscles, picking multiple per muscle if needed
+  // ── Anchors ──
   const anchors = [];
   let anchorMuscleIdx = 0;
   while (anchors.length < limits.anchors && anchorMuscleIdx < muscleMap.anchors.length * 2) {
     const muscle = muscleMap.anchors[anchorMuscleIdx % muscleMap.anchors.length];
     anchorMuscleIdx++;
-    const candidates = getAnchorsForMuscle(muscle, equipment);
-    for (const c of candidates) {
-      if (!usedIds.has(c.id)) {
-        const repRange = getRepRange(goal, tag, true);
-        const baseline = profile.baselines[c.id];
-        const pct = getWeightPercentage(goal, tag);
-        const est1RM = baseline ? epley1RM(baseline.weight, baseline.reps) : 0;
-        let wt = est1RM > 0 ? workingWeight(est1RM, pct) : 0;
+    const c = pickCandidate(getAnchorsForMuscle(muscle, equipment), usedIds, variantOffset);
+    if (!c) continue;
 
-        // Cap dumbbell exercises to gym's max DB weight
-        if (profile.dbMaxWeight > 0 && c.equipment.includes('dumbbells') && wt > profile.dbMaxWeight) {
-          wt = profile.dbMaxWeight;
-        }
-
-        let note = '';
-        if (techniques.includes('slow_eccentrics') && tag === 'heavy') note = '3-sec eccentric on each rep.';
-        if (techniques.includes('pause_reps') && tag === 'heavy') note = '1-sec pause at bottom.';
-
-        anchors.push(createProgramExercise({
-          id: c.id,
-          name: c.name,
-          sets: anchorSets,
-          setsRule: 'anchor_set_count',
-          reps: `${repRange.min}-${repRange.max}`,
-          repsRule: 'rep_range_for_goal',
-          weight: wt,
-          weightRule: est1RM > 0 ? 'percentage_of_1rm' : 'no_baseline',
-          anchor: true,
-          note,
-          equipmentRequired: c.equipment,
-        }));
-        usedIds.add(c.id);
-        break;
-      }
+    const repRange = getRepRange(goal, tag, true);
+    const baseline = profile.baselines[c.id];
+    const pct = getWeightPercentage(goal, tag);
+    const est1RM = baseline ? epley1RM(baseline.weight, baseline.reps) : 0;
+    let wt = est1RM > 0 ? workingWeight(est1RM, pct) : 0;
+    if (profile.dbMaxWeight > 0 && c.equipment.includes('dumbbells') && wt > profile.dbMaxWeight) {
+      wt = profile.dbMaxWeight;
     }
+
+    let tech = '';
+    if (techniques.includes('slow_eccentrics') && tag === 'heavy') tech = '3-sec eccentric each rep.';
+    if (techniques.includes('pause_reps') && tag === 'heavy') tech = '1-sec pause at the bottom.';
+
+    anchors.push(createProgramExercise({
+      id: c.id, name: c.name,
+      sets: anchorSets, setsRule: 'anchor_set_count',
+      reps: `${repRange.min}-${repRange.max}`, repsRule: 'rep_range_for_goal',
+      weight: wt, weightRule: est1RM > 0 ? 'percentage_of_1rm' : 'no_baseline',
+      anchor: true,
+      target: anchorTarget(tag),
+      note: joinNote(exerciseCue(c.id), tech),
+      equipmentRequired: c.equipment,
+    }));
+    usedIds.add(c.id);
   }
 
-  // Pick accessories — cycle through accessory muscles, filling to limit
+  // ── Accessories ──
   const accessories = [];
   let accMuscleIdx = 0;
   while (accessories.length < limits.accessories && accMuscleIdx < muscleMap.accessories.length * 3) {
     const muscle = muscleMap.accessories[accMuscleIdx % muscleMap.accessories.length];
     accMuscleIdx++;
-    const candidates = getAccessoriesForMuscle(muscle, equipment);
-    for (const c of candidates) {
-      if (!usedIds.has(c.id)) {
-        const repRange = getRepRange(goal, tag, false);
+    const c = pickCandidate(getAccessoriesForMuscle(muscle, equipment), usedIds, variantOffset);
+    if (!c) continue;
 
-        let note = '';
-        // Apply technique annotations to later accessories
-        if (techniques.includes('drop_sets') && accessories.length >= limits.accessories - 2) {
-          note = 'Drop set on final set — reduce weight ~20%, rep to failure.';
-        } else if (techniques.includes('myo_reps') && tag === 'volume' && accessories.length >= limits.accessories - 2) {
-          note = 'Myo-rep set: activation set to near failure, then 3-5 mini-sets of 3-5 reps with short rest.';
-        } else if (techniques.includes('rest_pause') && accessories.length >= limits.accessories - 1) {
-          note = 'Rest-pause on last set: hit failure, rest 10-15 sec, go again x2.';
-        } else if (techniques.includes('partials') && tag === 'volume') {
-          note = 'Partials after final set — 5-6 partial reps through the hardest range.';
-        }
-
-        accessories.push(createProgramExercise({
-          id: c.id,
-          name: c.name,
-          sets: accessorySets,
-          setsRule: 'volume_target',
-          reps: `${repRange.min}-${repRange.max}`,
-          repsRule: 'rep_range_for_goal',
-          weight: 0,
-          weightRule: 'no_baseline',
-          anchor: false,
-          note,
-          equipmentRequired: c.equipment,
-        }));
-        usedIds.add(c.id);
-        break;
-      }
+    const repRange = getRepRange(goal, tag, false);
+    let tech = '';
+    if (techniques.includes('drop_sets') && accessories.length >= limits.accessories - 2) {
+      tech = 'Drop set on the final set — cut ~20%, rep to failure.';
+    } else if (techniques.includes('myo_reps') && tag === 'volume' && accessories.length >= limits.accessories - 2) {
+      tech = 'Myo-reps: one activation set near failure, then 3–5 mini-sets of 3–5 reps.';
+    } else if (techniques.includes('rest_pause') && accessories.length >= limits.accessories - 1) {
+      tech = 'Rest-pause the last set: to failure, rest 10–15s, go again ×2.';
+    } else if (techniques.includes('partials') && tag === 'volume') {
+      tech = 'Partials after the final set — 5–6 through the hardest range.';
     }
+
+    accessories.push(createProgramExercise({
+      id: c.id, name: c.name,
+      sets: accessorySets, setsRule: 'volume_target',
+      reps: `${repRange.min}-${repRange.max}`, repsRule: 'rep_range_for_goal',
+      weight: 0, weightRule: 'no_baseline',
+      anchor: false,
+      note: joinNote(exerciseCue(c.id), tech),
+      equipmentRequired: c.equipment,
+    }));
+    usedIds.add(c.id);
   }
 
-  // Apply superset pairing if user likes supersets
-  if (techniques.includes('supersets') && accessories.length >= 4) {
-    for (let i = 0; i < accessories.length - 1; i += 2) {
-      accessories[i].note = (accessories[i].note ? accessories[i].note + ' ' : '') + `Superset with ${accessories[i+1].name.value}.`;
-      accessories[i+1].note = (accessories[i+1].note ? accessories[i+1].note + ' ' : '') + `Superset with ${accessories[i].name.value}.`;
-    }
+  // ── Supersets ──
+  // Always pair the final two accessories as a burnout superset. If the lifter
+  // likes supersets, pair everything from the 3rd accessory onward.
+  const pairSuperset = (a, b, gid) => {
+    a.supersetGroup = gid; b.supersetGroup = gid;
+    a.note = joinNote(a.note, 'Superset — minimal rest between the two.');
+    b.note = joinNote(b.note, 'Superset — minimal rest between the two.');
+  };
+  if (techniques.includes('supersets')) {
+    let g = 1;
+    for (let i = 2; i + 1 < accessories.length; i += 2) pairSuperset(accessories[i], accessories[i+1], 'ss' + g++);
+  } else if (accessories.length >= 4) {
+    const n = accessories.length;
+    pairSuperset(accessories[n-2], accessories[n-1], 'ss1');
   }
 
-  return { anchors, accessories };
+  // ── Day focus label (from the primary anchor's main muscle) ──
+  const focusMuscle = anchors.length ? getExerciseById(anchors[0].id)?.muscles.primary[0] : null;
+  const focus = focusMuscle ? `${MUSCLE_LABEL[focusMuscle] || focusMuscle} Primary` : '';
+
+  return { anchors, accessories, focus };
 }
 
 // ─── BUILD FULL PROGRAM ───────────────────────────────────────
@@ -263,10 +287,12 @@ function generateProgramWithLayouts(profile, split, splitRule, layouts) {
       dayType: layout.dayType,
       weekA: {
         tag: trackedValue(layout.weekATag, 'wave_periodization'),
+        focus: weekAExercises.focus,
         sections: buildSections(weekAExercises),
       },
       weekB: {
         tag: trackedValue(layout.weekBTag, 'wave_periodization'),
+        focus: weekBExercises.focus,
         sections: buildSections(weekBExercises),
       },
     };

@@ -58,6 +58,8 @@ function createProgramExercise(opts) {
     weight: trackedValue(opts.weight, opts.weightRule || 'percentage_of_1rm'),
     anchor: opts.anchor || false,
     note: opts.note || '',
+    target: opts.target || null,            // explicit target string (e.g. "2 top + 1 back-off")
+    supersetGroup: opts.supersetGroup || null, // exercises sharing a group id are supersetted
     equipmentRequired: opts.equipmentRequired || []
   };
 }
@@ -100,22 +102,39 @@ function programToLegacyFormat(program) {
 
     const toVariant = (variant, tag) => {
       const id = day.label.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + tag;
-      const sections = variant.sections.map(sec => ({
-        label: sec.label,
-        exercises: sec.exercises.map(ex => ({
-          id: ex.id,
-          name: ex.name.value,
-          note: ex.note || '',
-          target: `${ex.sets.value} × ${ex.reps.value}`,
-          anchor: ex.anchor,
-          defaultSets: ex.sets.value,
-          anchorVol: tag === 'volume' && ex.anchor ? true : undefined
-        }))
-      }));
+      const mapExercise = (ex) => ({
+        id: ex.id,
+        name: ex.name.value,
+        note: ex.note || '',
+        target: ex.target || `${ex.sets.value} × ${ex.reps.value}`,
+        anchor: ex.anchor,
+        defaultSets: ex.sets.value,
+        anchorVol: tag === 'volume' && ex.anchor ? true : undefined
+      });
+
+      const sections = variant.sections.map(sec => {
+        // Group consecutive exercises that share a supersetGroup id into
+        // the tracker's { superset:true, exercises:[...] } shape.
+        const out = [];
+        const groups = {};
+        for (const ex of sec.exercises) {
+          if (ex.supersetGroup) {
+            if (!groups[ex.supersetGroup]) {
+              groups[ex.supersetGroup] = { superset: true, exercises: [] };
+              out.push(groups[ex.supersetGroup]);
+            }
+            groups[ex.supersetGroup].exercises.push(mapExercise(ex));
+          } else {
+            out.push(mapExercise(ex));
+          }
+        }
+        return { label: sec.label, exercises: out };
+      });
+
       return {
         id,
         title: day.dayType.toUpperCase(),
-        subtitle: day.label + ' — ' + (tag === 'heavy' ? 'Heavy' : 'Volume'),
+        subtitle: (variant.focus || day.label) + ' — ' + (tag === 'heavy' ? 'Heavy' : 'Volume'),
         tag,
         sections
       };
