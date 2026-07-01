@@ -919,9 +919,9 @@ function activateProgram() {
   localStorage.setItem('active_generated_program', JSON.stringify(legacy));
   localStorage.setItem('generated_program', JSON.stringify(generatedProgram));
   localStorage.setItem('generator_profile', JSON.stringify(profile));
-  // Redirect to tracker
+  // Redirect into the full tracker (index.html loads active_generated_program)
   setTimeout(() => {
-    window.location.href = 'tracker.html';
+    window.location.href = 'index.html';
   }, 500);
 }
 
