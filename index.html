@@ -674,20 +674,25 @@
   #landingModal .landing-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(200,241,53,.30);}
   #landingModal .landing-primary .lp-main{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
   #landingModal .landing-primary .lp-sub{font-family:'Inter',sans-serif;font-size:11px;font-weight:500;opacity:.72;text-transform:none;}
-  #landingModal .landing-secondary{margin-top:16px;background:transparent;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;padding:8px;transition:color .12s ease;}
-  #landingModal .landing-secondary:hover{color:var(--white);}
+  #landingModal .landing-secondary{width:100%;margin-top:12px;background:var(--card);color:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px 20px;cursor:pointer;display:flex;flex-direction:column;gap:3px;align-items:center;transition:border-color .12s ease,transform .12s ease;}
+  #landingModal .landing-secondary:hover{border-color:var(--accent);transform:translateY(-2px);}
+  #landingModal .landing-secondary .ls-main{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);}
+  #landingModal .landing-secondary .ls-sub{font-family:'Inter',sans-serif;font-size:11px;font-weight:500;color:var(--muted);text-transform:none;}
 </style>
 <div id="landingModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center;">
   <div class="landing-card">
     <div class="landing-badge">⚡</div>
     <div class="landing-kicker">AI Workout Generator</div>
     <h2 class="landing-title">YOUR PERFECT<br><span>PROGRAM</span>, IN MINUTES</h2>
-    <p class="landing-sub">Answer a few quick questions and get a personalized, periodized training plan — then track every set in one place.</p>
+    <p class="landing-sub">Two ways to start: let AI build you a personalized plan, or jump straight into logging your own workouts.</p>
     <button class="landing-primary" onclick="localStorage.removeItem('trackingOnly');window.location.href='generator.html'">
-      <span class="lp-main">Build My Program</span>
-      <span class="lp-sub">Personalized in about 2 minutes</span>
+      <span class="lp-main">⚡ Build My Program</span>
+      <span class="lp-sub">Answer a few questions — personalized plan in ~2 min</span>
     </button>
-    <button class="landing-secondary" onclick="startTracking()">Just want to log? Start tracking →</button>
+    <button class="landing-secondary" onclick="startTracking()">
+      <span class="ls-main">📝 Log a Workout</span>
+      <span class="ls-sub">Start from a blank template and add your own exercises</span>
+    </button>
   </div>
 </div>
 
@@ -880,7 +885,7 @@ function saveDayName() {
   selector.value = trackingDays.length - 1;
 
   closeCreateDayModal();
-  switchDay(trackingDays.length - 1);
+  switchTrackingDay(trackingDays.length - 1);
 }
 
 function switchTrackingDay(dayIdx) {
