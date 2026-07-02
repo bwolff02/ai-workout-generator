@@ -662,14 +662,32 @@
 <div class="toast" id="toast">Workout saved!</div>
 
 <!-- Landing Page Modal -->
-<div id="landingModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;align-items:center;justify-content:center;">
-  <div style="background:var(--dark);border:1px solid var(--border);border-radius:12px;padding:40px;max-width:500px;text-align:center;">
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:.04em;margin-bottom:12px;">MY TRAINING</div>
-    <div style="font-size:14px;color:var(--muted);margin-bottom:32px;line-height:1.5;">Choose how you want to use the app. Build a personalized program with AI, or start logging workouts right away.</div>
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      <button onclick="startTracking()" style="background:var(--accent);color:var(--black);font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.1em;padding:14px 20px;border-radius:8px;border:none;cursor:pointer;font-weight:600;text-transform:uppercase;">📝 Start Tracking</button>
-      <button onclick="localStorage.removeItem('trackingOnly');window.location.href='generator.html'" style="background:var(--card);color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.1em;padding:14px 20px;border-radius:8px;border:1px solid rgba(200,241,53,.3);cursor:pointer;text-transform:uppercase;">⚡ Build Program</button>
-    </div>
+<style>
+  #landingModal{padding:20px;}
+  #landingModal .landing-card{background:linear-gradient(180deg,var(--dark),#101010);border:1px solid var(--border);border-radius:18px;padding:38px 28px 30px;max-width:440px;width:100%;text-align:center;box-shadow:0 24px 70px rgba(0,0,0,.55);}
+  #landingModal .landing-badge{width:58px;height:58px;border-radius:15px;background:var(--accent-dim);border:1px solid rgba(200,241,53,.3);display:flex;align-items:center;justify-content:center;font-size:27px;margin:0 auto 18px;}
+  #landingModal .landing-kicker{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+  #landingModal .landing-title{font-family:'Bebas Neue',sans-serif;font-size:40px;line-height:.96;letter-spacing:.02em;margin-bottom:14px;color:var(--white);}
+  #landingModal .landing-title span{color:var(--accent);}
+  #landingModal .landing-sub{font-size:13.5px;line-height:1.55;color:var(--muted);margin:0 auto 26px;max-width:340px;}
+  #landingModal .landing-primary{width:100%;background:var(--accent);color:var(--black);border:none;border-radius:12px;padding:15px 20px;cursor:pointer;display:flex;flex-direction:column;gap:3px;align-items:center;transition:transform .12s ease,box-shadow .12s ease;box-shadow:0 6px 22px rgba(200,241,53,.20);}
+  #landingModal .landing-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(200,241,53,.30);}
+  #landingModal .landing-primary .lp-main{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+  #landingModal .landing-primary .lp-sub{font-family:'Inter',sans-serif;font-size:11px;font-weight:500;opacity:.72;text-transform:none;}
+  #landingModal .landing-secondary{margin-top:16px;background:transparent;border:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;padding:8px;transition:color .12s ease;}
+  #landingModal .landing-secondary:hover{color:var(--white);}
+</style>
+<div id="landingModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center;">
+  <div class="landing-card">
+    <div class="landing-badge">⚡</div>
+    <div class="landing-kicker">AI Workout Generator</div>
+    <h2 class="landing-title">YOUR PERFECT<br><span>PROGRAM</span>, IN MINUTES</h2>
+    <p class="landing-sub">Answer a few quick questions and get a personalized, periodized training plan — then track every set in one place.</p>
+    <button class="landing-primary" onclick="localStorage.removeItem('trackingOnly');window.location.href='generator.html'">
+      <span class="lp-main">Build My Program</span>
+      <span class="lp-sub">Personalized in about 2 minutes</span>
+    </button>
+    <button class="landing-secondary" onclick="startTracking()">Just want to log? Start tracking →</button>
   </div>
 </div>
 
