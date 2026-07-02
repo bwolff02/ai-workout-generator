@@ -764,26 +764,33 @@ let currentTrackingDay = null;
 
 // ─── INIT ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
-  // Show landing modal if this is first load and no program/tracking mode
   const hasProgram = !!_generatedProgram || localStorage.getItem('active_generated_program');
-  const isFirstLoad = !localStorage.getItem('appState_initialized');
+  const hasOnboarded = !!localStorage.getItem('appState_initialized');
 
-  if (isFirstLoad && !hasProgram && !isTrackingOnly) {
+  // Build once, track from then on: a saved program always opens straight
+  // into the tracker — no landing choice ever again.
+  if (hasProgram) {
+    isTrackingOnly = false;
+    localStorage.removeItem('trackingOnly');
+    initNormalTracker();
+    return;
+  }
+
+  // Someone who chose "just track" stays in tracking-only mode.
+  if (isTrackingOnly) {
+    initTrackingOnly();
+    return;
+  }
+
+  // First-ever visit, no program and no choice made yet → show onboarding.
+  if (!hasOnboarded) {
     document.getElementById('landingModal').style.display = 'flex';
     localStorage.setItem('appState_initialized', 'true');
     return;
   }
 
-  // If they have a generated program, use normal tracker (program takes precedence)
-  if (hasProgram) {
-    isTrackingOnly = false;
-    localStorage.removeItem('trackingOnly');
-    initNormalTracker();
-  } else if (isTrackingOnly) {
-    initTrackingOnly();
-  } else {
-    initNormalTracker();
-  }
+  // Onboarded but no active program (e.g. reset to default) → tracker.
+  initNormalTracker();
 });
 
 function initTrackingOnly() {
