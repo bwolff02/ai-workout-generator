@@ -33,6 +33,18 @@
   .progress-wrap{margin-top:16px;height:5px;background:var(--border);border-radius:99px;overflow:hidden;}
   .progress-fill{height:100%;width:10%;background:var(--accent);border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1);}
 
+  /* Program synopsis (reveal moment) */
+  .synopsis-card{background:linear-gradient(160deg,var(--accent-dim),rgba(200,241,53,.02));border:1px solid rgba(200,241,53,.25);border-radius:14px;padding:22px 20px;margin-bottom:22px;}
+  .synopsis-kicker{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+  .synopsis-headline{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.02em;line-height:1.05;margin-bottom:12px;color:var(--white);}
+  .synopsis-text{font-size:13.5px;line-height:1.6;color:#cfcfcf;margin-bottom:18px;}
+  .synopsis-text b{color:var(--accent);font-weight:600;}
+  .synopsis-timeline{display:flex;flex-direction:column;gap:0;border-top:1px solid rgba(200,241,53,.15);}
+  .tl-row{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+  .tl-row:last-child{border-bottom:none;}
+  .tl-when{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);flex:0 0 84px;letter-spacing:.03em;padding-top:1px;}
+  .tl-what{font-size:13px;line-height:1.45;color:var(--muted);}
+
   /* Steps */
   .step{display:none;}
   .step.active{display:block;}
@@ -461,6 +473,8 @@
     <div class="step-title">Review & Edit</div>
     <div class="step-desc">Every number has a reason. Tap the info icon to see why, or edit anything — your changes are always respected.</div>
 
+    <div id="program-synopsis"></div>
+
     <div id="program-settings"></div>
 
     <div class="week-toggle" id="week-toggle" style="display:none;">
@@ -715,12 +729,58 @@ async function buildProgram() {
 }
 
 function renderProgram() {
+  renderSynopsis();
   renderProgramSettings();
   renderProgramDays();
 
   // Show week toggle if wave periodization
   const toggle = document.getElementById('week-toggle');
   toggle.style.display = generatedProgram.periodization.value === 'wave' ? 'flex' : 'none';
+}
+
+function renderSynopsis() {
+  const container = document.getElementById('program-synopsis');
+  if (!container) return;
+
+  const p = generatedProgram;
+  const split = p.split.value;
+  const goal = p.goal.value;
+  const period = p.periodization.value;
+  const days = profile.daysPerWeek;
+  const mins = profile.sessionMinutes;
+  const exp = profile.experience;
+
+  const splitLabels = { full_body: 'Full Body', upper_lower: 'Upper / Lower', ppl: 'Push / Pull / Legs' };
+  const goalVerb = { hypertrophy: 'build muscle', strength: 'get you stronger', recomp: 'lean you out while keeping muscle', general: 'keep you fit and consistent' };
+  const expArticle = exp === 'beginner' ? 'a' : 'an';
+
+  const splitWhy = {
+    full_body: 'hitting each muscle 2–3× a week, which is the most efficient way to grow on fewer training days',
+    upper_lower: 'balancing volume and recovery across four focused sessions',
+    ppl: 'spreading high weekly volume across dedicated push, pull, and leg days'
+  };
+  const periodWhy = period === 'wave'
+    ? 'It alternates <b>heavier, lower-rep</b> weeks with <b>higher-volume</b> weeks so you keep progressing without burning out.'
+    : 'It <b>gradually adds weight</b> over time for steady, predictable strength gains.';
+
+  const headline = `A ${splitLabels[split] || split} plan built to ${goalVerb[goal] || 'train'}`;
+
+  const text = `As ${expArticle} <b>${exp}</b> lifter training <b>${days} days a week</b> (about ${mins} min a session), `
+    + `you'll run a <b>${splitLabels[split] || split}</b> split — ${splitWhy[split] || 'structured around your schedule'}. `
+    + periodWhy;
+
+  container.innerHTML = `
+    <div class="synopsis-card">
+      <div class="synopsis-kicker">✦ Here's your plan</div>
+      <div class="synopsis-headline">${headline}</div>
+      <p class="synopsis-text">${text}</p>
+      <div class="synopsis-timeline">
+        <div class="tl-row"><span class="tl-when">Weeks 1–2</span><span class="tl-what">Dial in your form and lock in starting weights.</span></div>
+        <div class="tl-row"><span class="tl-when">Weeks 3–6</span><span class="tl-what">Add a little weight or a rep each week — strength starts climbing.</span></div>
+        <div class="tl-row"><span class="tl-when">Weeks 6+</span><span class="tl-what">Visible gains show up; take a lighter week whenever fatigue builds.</span></div>
+      </div>
+    </div>
+  `;
 }
 
 function renderProgramSettings() {
