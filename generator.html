@@ -45,6 +45,21 @@
   .tl-when{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--accent);flex:0 0 84px;letter-spacing:.03em;padding-top:1px;}
   .tl-what{font-size:13px;line-height:1.45;color:var(--muted);}
 
+  /* Refine panel (feedback → regenerate) */
+  .refine-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:26px;}
+  .refine-title{font-family:'Bebas Neue',sans-serif;font-size:23px;letter-spacing:.03em;}
+  .refine-sub{font-size:12.5px;color:var(--muted);margin-top:2px;margin-bottom:15px;line-height:1.4;}
+  .refine-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .refine-chip{background:var(--dark);border:1px solid var(--border);color:var(--white);border-radius:20px;padding:9px 15px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;}
+  .refine-chip:hover{border-color:var(--accent);color:var(--accent);}
+  .refine-chip:active{transform:scale(.96);}
+  .refine-text{display:flex;gap:8px;}
+  .refine-text .field-input{flex:1;min-width:0;}
+  .refine-apply{white-space:nowrap;padding:0 18px;}
+  .refine-result{font-size:12.5px;margin-top:12px;color:var(--accent);line-height:1.5;}
+  .refine-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(10px);background:var(--accent);color:var(--black);font-size:13px;font-weight:600;padding:12px 20px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:600;max-width:88%;text-align:center;}
+  .refine-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
   /* Steps */
   .step{display:none;}
   .step.active{display:block;}
@@ -484,6 +499,24 @@
 
     <div id="program-days"></div>
 
+    <div class="refine-panel">
+      <div class="refine-title">Not quite right?</div>
+      <div class="refine-sub">Tell it what to change and it rebuilds your program instantly.</div>
+      <div class="refine-chips">
+        <button class="refine-chip" onclick="applyFeedback('less_volume')">Less volume</button>
+        <button class="refine-chip" onclick="applyFeedback('more_volume')">More volume</button>
+        <button class="refine-chip" onclick="applyFeedback('harder')">Make it harder</button>
+        <button class="refine-chip" onclick="applyFeedback('simpler')">Keep it simple</button>
+        <button class="refine-chip" onclick="applyFeedback('shorter')">Shorter sessions</button>
+        <button class="refine-chip" onclick="applyFeedback('longer')">Longer sessions</button>
+      </div>
+      <div class="refine-text">
+        <input id="refine-input" class="field-input" type="text" placeholder="Or type it — e.g. “too much volume”, “make it harder”" onkeydown="if(event.key==='Enter')applyFeedbackText()">
+        <button class="btn btn-accent refine-apply" onclick="applyFeedbackText()">Apply</button>
+      </div>
+      <div id="refine-result" class="refine-result"></div>
+    </div>
+
     <div class="nav-buttons">
       <button class="btn btn-ghost" onclick="goToStep(1)">← Start Over</button>
       <button class="btn btn-accent" onclick="activateProgram()">Use This Program →</button>
@@ -736,6 +769,114 @@ function renderProgram() {
   // Show week toggle if wave periodization
   const toggle = document.getElementById('week-toggle');
   toggle.style.display = generatedProgram.periodization.value === 'wave' ? 'flex' : 'none';
+}
+
+// ─── FEEDBACK → REGENERATE ────────────────────────────────────
+const SESSION_TIERS = [45, 60, 75, 90];
+
+function currentExerciseCount() {
+  if (profile.exercisesPerSession) return profile.exercisesPerSession;
+  const lim = getSessionLimits(profile);
+  return lim.anchors + lim.accessories;
+}
+function currentSetCount() {
+  return profile.setsPerSession || currentExerciseCount() * 3;
+}
+
+function applyFeedback(type) {
+  const ex = currentExerciseCount();
+  const sets = currentSetCount();
+  let msg = '';
+
+  switch (type) {
+    case 'less_volume':
+      profile.exercisesPerSession = Math.max(4, ex - 1);
+      profile.setsPerSession = Math.max(9, sets - 3);
+      msg = 'Trimmed the volume — fewer exercises and sets per session.';
+      break;
+    case 'more_volume':
+      profile.exercisesPerSession = Math.min(11, ex + 1);
+      profile.setsPerSession = Math.min(36, sets + 3);
+      msg = 'Added volume — more exercises and sets per session.';
+      break;
+    case 'harder': {
+      const ladder = ['slow_eccentrics', 'drop_sets', 'rest_pause'];
+      const add = ladder.find(t => !(profile.techniques || []).includes(t));
+      if (add) {
+        profile.techniques = [...(profile.techniques || []), add];
+        msg = 'Cranked up the intensity — added advanced techniques to your sets.';
+      } else {
+        msg = 'Already using the full set of intensity techniques.';
+      }
+      break;
+    }
+    case 'simpler':
+      profile.techniques = [];
+      msg = 'Stripped it back — straight sets, no supersets or intensity techniques.';
+      break;
+    case 'shorter': {
+      const i = SESSION_TIERS.indexOf(profile.sessionMinutes);
+      profile.sessionMinutes = SESSION_TIERS[Math.max(0, (i < 0 ? 2 : i) - 1)];
+      profile.exercisesPerSession = Math.max(4, ex - 1);
+      profile.setsPerSession = Math.max(9, sets - 3);
+      msg = `Tightened sessions to about ${profile.sessionMinutes} minutes.`;
+      break;
+    }
+    case 'longer': {
+      const i = SESSION_TIERS.indexOf(profile.sessionMinutes);
+      profile.sessionMinutes = SESSION_TIERS[Math.min(SESSION_TIERS.length - 1, (i < 0 ? 2 : i) + 1)];
+      profile.exercisesPerSession = Math.min(11, ex + 1);
+      profile.setsPerSession = Math.min(36, sets + 3);
+      msg = `Extended sessions to about ${profile.sessionMinutes} minutes.`;
+      break;
+    }
+    default:
+      return;
+  }
+  regenerateFromProfile(msg);
+}
+
+function applyFeedbackText() {
+  const input = document.getElementById('refine-input');
+  const q = (input.value || '').toLowerCase().trim();
+  if (!q) return;
+
+  let type = null;
+  if (/too much|less|reduce|fewer|cut down|overwhelming|too many/.test(q) && !/time|long|short/.test(q)) type = 'less_volume';
+  else if (/not enough|more volume|add (more|volume)|increase|extra work|too easy on volume/.test(q)) type = 'more_volume';
+  else if (/hard|harder|intense|intensity|challeng|tough|brutal/.test(q)) type = 'harder';
+  else if (/easi|simple|simpler|basic|no superset|straight set|too complicated|less complex/.test(q)) type = 'simpler';
+  else if (/short|shorter|less time|quick|faster|not enough time/.test(q)) type = 'shorter';
+  else if (/long|longer|more time|bigger session/.test(q)) type = 'longer';
+
+  if (type) {
+    input.value = '';
+    applyFeedback(type);
+  } else {
+    const res = document.getElementById('refine-result');
+    res.style.color = 'var(--muted)';
+    res.textContent = "Didn't quite catch that — try one of the quick options above (volume, intensity, or session length), or tap an exercise below to swap it.";
+  }
+}
+
+async function regenerateFromProfile(msg) {
+  generatedProgram = generateProgram(profile);
+  await attachReasoningToProgram(generatedProgram);
+  renderProgram();
+  localStorage.setItem('generated_program', JSON.stringify(generatedProgram));
+  localStorage.setItem('generator_profile', JSON.stringify(profile));
+  document.getElementById('program-synopsis')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  refineToast(msg);
+}
+
+function refineToast(msg) {
+  if (!msg) return;
+  let t = document.getElementById('refineToast');
+  if (!t) { t = document.createElement('div'); t.id = 'refineToast'; t.className = 'refine-toast'; document.body.appendChild(t); }
+  t.textContent = '✓ ' + msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
 }
 
 function renderSynopsis() {
@@ -1004,6 +1145,10 @@ const saved = localStorage.getItem('generated_program');
 if (saved) {
   try {
     generatedProgram = JSON.parse(saved);
+    // Restore the profile too so feedback/refine works on a reloaded program
+    const savedProfile = localStorage.getItem('generator_profile');
+    if (savedProfile) profile = JSON.parse(savedProfile);
+    else if (generatedProgram.profile) profile = generatedProgram.profile;
     // Offer to show existing or start fresh
     if (confirm('You have a saved program. Load it?')) {
       goToStep('program');
